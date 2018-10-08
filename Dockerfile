@@ -1,16 +1,6 @@
-FROM alpine:3.8 AS builder
+FROM alpine:3.8
 
 ENV TERRAFORM_VERSION=0.11.8
-
-WORKDIR /tmp
-RUN set -x && \
-    apk add --no-cache git=2.18.0-r0 unzip=6.0-r4 wget=1.19.5-r0 && \
-    wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
-    unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d / && \
-    rm -rf /tmp/*
-
-
-FROM scratch
 
 # Build-time metadata as defined at http://label-schema.org
 ARG BUILD_DATE
@@ -29,7 +19,12 @@ LABEL org.label-schema.vendor="tmknom" \
       org.label-schema.schema-version="1.0"
 
 WORKDIR /tmp
-COPY --from=builder /terraform /terraform
+RUN set -x && \
+    apk add --no-cache git=2.18.0-r0 unzip=6.0-r4 wget=1.19.5-r0 && \
+    wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
+    unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d / && \
+    apk del --purge unzip wget && \
+    rm -rf /tmp/*
 
 WORKDIR /work
 ENTRYPOINT ["/terraform"]
